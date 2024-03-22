@@ -13,7 +13,7 @@
 // import Button from "@mui/material/Button";
 // import Box from "@mui/material/Box";
 // import Stack from "@mui/material/Stack";
-// import { db } from "../firebase";
+// import { db, storage } from "../firebase"; // Assuming you have initialized Firebase storage
 // import {
 //   collection,
 //   getDocs,
@@ -70,6 +70,11 @@
 //     setPage(0);
 //   };
 
+//   const handleEditClose = () => {
+//     setEditOpen(false);
+//     setFormId(null);
+//   };
+
 //   const deleteUser = (id) => {
 //     Swal.fire({
 //       title: "Are you sure?",
@@ -100,15 +105,12 @@
 //       getUsers();
 //     }
 //   };
+ 
+  
 
 //   const editData = (id, Name, Price, Category) => {
 //     setFormId({ id, Name, Price, Category });
 //     setEditOpen(true);
-//   };
-
-//   const handleEditClose = () => {
-//     setEditOpen(false);
-//     setFormId(null);
 //   };
 
 //   return (
@@ -148,6 +150,7 @@
 //           <Divider />
 //           <Box height={10} />
 //           <Stack direction="row" spacing={2} className="my-2 mb-2">
+
 //             <Autocomplete
 //               disablePortal
 //               id="combo-box-demo"
@@ -159,6 +162,9 @@
 //                 <TextField {...params} size="small" label="Search Products" />
 //               )}
 //             />
+
+
+
 //             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}></Typography>
 //             <Button variant="contained" endIcon={<AddCircleIcon />} onClick={() => setOpen(true)}>
 //               Add
@@ -169,6 +175,9 @@
 //             <Table stickyHeader aria-label="sticky table">
 //               <TableHead>
 //                 <TableRow>
+//                 <TableCell align="left" style={{ minWidth: "100px" }}>
+//                     Images
+//                   </TableCell>
 //                   <TableCell align="left" style={{ minWidth: "100px" }}>
 //                     Name
 //                   </TableCell>
@@ -192,6 +201,11 @@
 //                   .map((row) => {
 //                     return (
 //                       <TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
+//                         <TableCell align="left">
+//                           {row.Images && row.Images.map((image, index) => (
+//                             <img key={index} src={image} alt={`Image ${index + 1}`} style={{width: '50px', height: '50px', marginRight: '5px'}} />
+//                           ))}
+//                         </TableCell>
 //                         <TableCell align="left">{row.Name}</TableCell>
 //                         <TableCell align="left">{row.Price}</TableCell>
 //                         <TableCell align="left">{row.Category}</TableCell>
@@ -237,6 +251,7 @@
 //     </>
 //   );
 // }
+
 
 import { useEffect, useState } from "react";
 import Paper from "@mui/material/Paper";
@@ -291,6 +306,8 @@ export default function UsersList() {
   const [open, setOpen] = useState(false);
   const [editopen, setEditOpen] = useState(false);
   const [formId, setFormId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [noMatchFound, setNoMatchFound] = useState(false); 
 
   useEffect(() => {
     getUsers();
@@ -338,13 +355,39 @@ export default function UsersList() {
     getUsers();
   };
 
-  const filterData = (v) => {
-    if (v) {
-      setRows([v]);
-    } else {
+ 
+  const filterData = () => {
+    if (!searchTerm) {
       getUsers();
+      return;
+    }
+  
+    const filteredRows = rows.filter(row => {
+      return row.Name.toLowerCase().includes(searchTerm.toLowerCase());
+      // return row.Name.toLowerCase() === searchTerm.toLowerCase();
+    });
+  
+    if (filteredRows.length === 0) {
+      setNoMatchFound(true);
+    } else {
+      setRows(filteredRows);
+      setNoMatchFound(false);
     }
   };
+
+  
+  const handleSearchInputChange = (event) => {
+    const { value } = event.target;
+    setSearchTerm(value);
+    if (!value) {
+      getUsers();
+      setNoMatchFound(false); // Reset no match found status
+    } else {
+      filterData(); // Call filterData for non-empty search term
+    }
+  };
+  
+
 
   const editData = (id, Name, Price, Category) => {
     setFormId({ id, Name, Price, Category });
@@ -388,17 +431,24 @@ export default function UsersList() {
           <Divider />
           <Box height={10} />
           <Stack direction="row" spacing={2} className="my-2 mb-2">
-            <Autocomplete
-              disablePortal
-              id="combo-box-demo"
-              options={rows}
-              sx={{ width: 300 }}
-              onChange={(e, v) => filterData(v)}
-              getOptionLabel={(row) => row.Name || ""}
-              renderInput={(params) => (
-                <TextField {...params} size="small" label="Search Products" />
-              )}
+
+
+            <TextField
+              id="search"
+              label="Search Products"
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchInputChange}
             />
+            {noMatchFound && searchTerm && ( // Display message only if searchTerm is not empty
+              <Typography variant="subtitle1" style={{ color: "red" }}>
+                No match found
+              </Typography>
+            )}
+            
+
+        
+
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}></Typography>
             <Button variant="contained" endIcon={<AddCircleIcon />} onClick={() => setOpen(true)}>
               Add
@@ -485,4 +535,3 @@ export default function UsersList() {
     </>
   );
 }
-

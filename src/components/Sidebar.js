@@ -9,7 +9,7 @@ const Sidebar = () => {
     try {
       await auth.signOut(); // Sign out the user
       console.log('User logged out successfully!');
-      window.location.href = '/login';
+      window.location.href = '/login'; 
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -83,3 +83,4 @@ const linkStyle = {
 };
 
 export default Sidebar;
+
